@@ -39,12 +39,18 @@
            (sp-test-command-setup)
            (insert example)
            (goto-char (point-min))
+           (replace-regexp "X" "")
            (cond
-            ((re-search-forward "F" nil t))
-            ((re-search-forward "B" nil t))
+            ((re-search-forward "F" nil t)
+             (delete-char -1)
+             (should (equal (ppar-get-pair) pair-data)))
+            ((re-search-forward "B" nil t)
+             (delete-char -1)
+             (should (equal (ppar-get-pair t) pair-data)))
             (t
-             (replace-regexp "X" "")
              (goto-char (point-min))
              (should (equal (ppar-get-pair) pair-data))
              (goto-char (point-max))
              (should (equal (ppar-get-pair t) pair-data)))))))))
+
+(provide 'test-helper)
