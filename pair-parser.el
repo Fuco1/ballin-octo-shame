@@ -26,7 +26,6 @@
 
 (require 'dash)
 (require 'dash-functional)
-(require 'dash-pl)
 
 (font-lock-add-keywords 'emacs-lisp-mode `((,(concat "("
                                                      (regexp-opt '("ppar-get") t)
@@ -81,7 +80,7 @@ behind which the search should not extend."
 (defun ppar-get-match (pair-set &optional backward bound)
   "Get the closest match of pattern from PAIR-SET to point."
   (-when-let (re (ppar-get-all-matches pair-set backward bound))
-    (-min-by (-on '> (-cut -pl-get <> :beg)) re)))
+    (-min-by (-on '> (-cut plist-get <> :beg)) re)))
 
 (defun ppar-goto-after-match (pair-set &optional backward bound)
   (--when-let (ppar-get-match pair-set backward bound)
