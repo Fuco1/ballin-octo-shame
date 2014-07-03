@@ -246,12 +246,11 @@ FORM can be a form of these types:
 * :end - return the end of the context block."
   (cond
    ((eq form :id)
-    `(plist-get ,data :id))
+    `(plist-get ,cinfo :id))
    ((eq form :beg)
-    `(plist-get ,data :beg))
+    `(plist-get ,cinfo :beg))
    ((eq form :end)
-    `(plist-get ,data :end))))
-
+    `(plist-get ,cinfo :end))))
 (defun ppar-skip-up-context (&optional back)
   "Skip out of the current context."
   (-when-let (cinfo (ppar-get-context-info))
