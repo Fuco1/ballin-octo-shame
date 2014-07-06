@@ -269,5 +269,11 @@ If BACK is non-nil, skip backwards."
   (-when-let (lc (assoc context (ppar-get-local-definitions ppar-context-types)))
     (funcall (ppar-context-get lc :skip) back)))
 
+(font-lock-add-keywords 'emacs-lisp-mode `((,(concat "("
+                                                     (regexp-opt '("ppar-cinfo-get"
+                                                                   ) t)
+                                                     "\\>")
+                                            (1 font-lock-keyword-face))))
+
 ;; TODO: bounding should be done with narrowing instead of passing an
 ;; argument, it is pretty fast and simplifies lots of things.
