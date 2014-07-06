@@ -1,0 +1,6 @@
+* Overview
+
+* Functions
+** ppar-get-pair
+
+This function has only one responsibility: to get the next [fn:37564ef1: We will always talk about the next or following pair.  The function works in exactly equivalent way in the backward direction.  To search in backward direction, pass non-nil value as the first optional argument.] balanced pair expression after the point *in the current context*.  This means that if you want the next balanced expression in a specific context, you first need to get there by using ~ppar-skip-to-context~.
