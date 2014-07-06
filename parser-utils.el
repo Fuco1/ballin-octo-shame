@@ -130,7 +130,7 @@ current context is the one tested by the predicate.
 
 NB: The test in \"backward\" direction is equivalent to moving
 point one character backward.  However, we feel this interface
-makes it more natural, considering the oddities of emacs's
+makes it more natural, considering the oddities of Emacs's
 display system (cursor is *always* between two positions, even if
 it doesn't look so.)
 
@@ -145,8 +145,9 @@ specified, current point is used.
 
 The return value is a cons pair (BEG . END), where BEG and END
 are buffer positions representing the beginning and the end of
-the context block respectivelly.  Calling the associate predicate
-at either of these positions should return nil.
+the context block respectively.  Calling the associated predicate
+at either of these positions in the respective direction (back at
+beginning, forward at end) should return nil.
 
 The skipper function should take one *optional* argument.  If
 this is specified, the search goes backward from point, otherwise
@@ -155,7 +156,7 @@ the context block, such that calling the predicate would return
 nil, but calling the predicate for the following position would
 return non-nil.  Similarly for the backward search.
 
-The entires are either lists of the form
+The entries are either lists of the form
 
   (:context-type predicate bounds skipper)
 
@@ -164,7 +165,7 @@ lists described above, these are then local definitions for the
 major-mode.  The \"naked\" pairs are used as global definitions.
 
 Notes: Some functions return default context of :code is if no
-predicate succeded, so this should not be specified here." )
+predicate succeeded, so this should not be specified here." )
 
 (defmacro ppar-context-get (data form)
   "Get meta-information about context.
