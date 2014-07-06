@@ -1,3 +1,5 @@
+(require 'dash)
+
 
 ;; Utils
 
