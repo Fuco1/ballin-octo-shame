@@ -235,24 +235,44 @@ Context info is a plist with these items:
               :beg (car bounds)
               :end (cdr bounds))))))
 
-(defmacro ppar-cinfo-get (cinfo form)
+(cl-eval-when (compile eval load)
+  (defun ppar--get-substitute (replace-keyword struct form)
+    (if (listp form)
+        (if (memq (car form) '(ppar-cinfo-get))
+            form
+          (--map (ppar--get-substitute replace-keyword struct it) form))
+      (if (keywordp form)
+          (funcall replace-keyword struct form)
+        form)))
+
+  (defun ppar--replace-keyword-cinfo (struct keyword)
+    (cl-case keyword
+      (:id `(plist-get ,struct :id))
+      (:beg `(plist-get ,struct :beg))
+      (:end `(plist-get ,struct :end)))))
+
+;; TODO: add info node about the "ppar-foo-get" forms "DSL" and how
+;; they work.
+;;;@notest
+(defmacro ppar-cinfo-get (cinfo &rest forms)
   "Get information about context.
 
 CINFO is the list describing the context.  It should be in format
 format returned by `ppar-get-context-info'.
 
-FORM can be a form of these types:
+FORMS is an attribute we want to query.  Currently supported
+attributes are:
 
 * :id - return the type of the context.
 * :beg - return the beginning of the context block.
 * :end - return the end of the context block."
-  (cond
-   ((eq form :id)
-    `(plist-get ,cinfo :id))
-   ((eq form :beg)
-    `(plist-get ,cinfo :beg))
-   ((eq form :end)
-    `(plist-get ,cinfo :end))))
+  (declare (indent 1)
+           (debug (form body)))
+  (let ((st (make-symbol "struct")))
+    (ppar--get-substitute 'ppar--replace-keyword-cinfo
+                          st
+                          `(let ((,st ,cinfo)) ,@forms))))
+
 (defun ppar-skip-up-context (&optional back)
   "Skip out of the current context."
   (-when-let (cinfo (ppar-get-context-info))
