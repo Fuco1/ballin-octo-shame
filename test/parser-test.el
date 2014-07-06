@@ -61,8 +61,11 @@
 ;; - outer end of pair
 ;; - end of the suffix.
 
-;; F marks the spot where point should be for forward test, B for
+;; - F marks the spot where point should be for forward test, B for
 ;; backward, otherwise it goes to (point-min) or (point-max)
+;; - A marks the place where point *should be* after the function is
+;; called
+
 ;; TODO: somehow add more settings, like major-mode etc
 (ert-deftest ppar-test-parens-bidir ()
   (ppar-test-pair (("(" ")"))

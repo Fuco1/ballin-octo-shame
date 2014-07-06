@@ -1,7 +1,7 @@
 (require 'ert)
 (require 'dash)
 
-(defun ppar-test-extract-context (example)
+(defun ppar-test--extract-context (example)
   (let* ((case-fold-search nil)
          (example (replace-regexp-in-string "[FB]" "" example)))
     (with-temp-buffer
@@ -16,14 +16,15 @@
         (list :beg (1+ beg)
               :end (1+ end))))))
 
-(defmacro ppar-test-context-get-info (context setup &rest examples)
+;;;@test
+(defmacro ppar-test-get-context-info (context setup &rest examples)
   (declare (indent 2))
   `(cl-dolist (example ',examples)
      (with-temp-buffer
        (fundamental-mode)
        ,setup
        (let ((context-data (-concat (list :id ,context)
-                                    (ppar-test-extract-context example)))
+                                    (ppar-test--extract-context example)))
              (case-fold-search nil))
          (insert example)
          (goto-char (point-min))
@@ -34,6 +35,7 @@
            (delete-char -1)
            (should (equal (ppar-get-context-info) context-data))))))))
 
+;; TODO: extract the examples and pre-process them
 (ert-deftest ppar-test-context-get-info-string ()
   (ppar-test-context-get-info :string
     (emacs-lisp-mode)
@@ -47,11 +49,45 @@ asdasd sd"
   (ppar-test-context-get-info :comment
     (emacs-lisp-mode)
     "asdasd X;; asd \"foo F bar baz\" asdadasdX"
-    "asdasd X;; sdjfh sdfjhsdfFX
-asdad asdkjads"
+    "asdasd X;; sdjfh sdfjhsdfF
+Xasdad asdkjads"
     ))
 
-(defmacro ppar-test-context-id (context setup &rest examples)
+(defmacro ppar-test-skip-up-context (setup &rest examples)
+  (declare (indent 2))
+  `(cl-dolist (example ',examples)
+     (with-temp-buffer
+       (fundamental-mode)
+       ,setup
+       (let ((case-fold-search nil))
+         (insert example)
+         (goto-char (point-min))
+         (cond
+          ((re-search-forward "F" nil t)
+           (delete-char -1)
+           (ppar-skip-up-context)
+           (should (looking-at "A"))))))))
+
+(ert-deftest ppar-test-skip-up-context-string ()
+  (ppar-test-skip-up-context
+    (emacs-lisp-mode)
+    "\"foo F bar baz\"A"
+    "asdasd \"foo F bar baz\"A asdadasd"
+    "asdasd \"foo F bar baz\"A ;; asdasd
+asdasd sd"
+    "\"foo F bar baz\"A;; asdasd"))
+
+(ert-deftest ppar-test-skip-up-context-comment ()
+  (ppar-test-skip-up-context
+    (emacs-lisp-mode)
+    "asdasd ;; asd \"foo F bar baz\" asdadasd
+Aasd"
+    "asdasd ;; sdjfh sdfjhsdfF
+Aasdad asdkjads"
+    ))
+
+;;;@test
+(defmacro ppar-test-get-context (context setup &rest examples)
   (declare (indent 2))
   `(cl-dolist (example ',examples)
      (with-temp-buffer
@@ -73,8 +109,8 @@ asdad asdkjads"
                (should (not (equal (ppar-get-context t) ,context)))
              (should (equal (ppar-get-context t) ,context)))))))))
 
-(ert-deftest ppar-test-context-id-string ()
-  (ppar-test-context-id :string
+(ert-deftest ppar-test-get-context-string ()
+  (ppar-test-get-context :string
     (emacs-lisp-mode)
     "foo \"bar Fbaz\" qux"
     "\"bar Fbaz\" qux"
@@ -86,8 +122,8 @@ asdad asdkjads"
     "foo \"bar baz ;; boo\"B qux"
     ))
 
-(ert-deftest ppar-test-context-id-code ()
-  (ppar-test-context-id :code
+(ert-deftest ppar-test-get-context-code ()
+  (ppar-test-get-context :code
     (emacs-lisp-mode)
     "Ffoo \"bar baz\" qux"
     "Ffoo \"bar baz\" Fqux"
@@ -101,8 +137,8 @@ asdad asdkjads"
     "foFo \"bar baz ;; boo\" qux"
     ))
 
-(ert-deftest ppar-test-context-id-comment()
-  (ppar-test-context-id :comment
+(ert-deftest ppar-test-get-context-comment ()
+  (ppar-test-get-context :comment
     (emacs-lisp-mode)
     "foo bar ;; Fbaz qux"
     "foo bar F;; baz qux"
