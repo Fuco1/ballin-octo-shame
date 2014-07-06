@@ -71,19 +71,20 @@ If optional argument P is present test this instead off point."
                (memq (char-syntax (char-after p)) '(?< ?>))
                (not (eq (char-after p) ?\n)))))))
 
+;; TODO: so ugly, rewrite this!
 (defun ppar-bounds-comment ()
   "If the point is inside a comment, return its bounds."
-  (when (or (sp-point-in-comment)
+  (when (or (ppar-in-comment?)
             (looking-at "[[:space:]]+\\s<"))
     (let ((open (save-excursion
                   (while (and (not (bobp))
-                              (or (sp-point-in-comment)
+                              (or (ppar-in-comment?)
                                   (save-excursion
                                     (backward-char 1)
                                     (looking-at "[[:space:]]+\\s<"))))
                     (backward-char 1))
                   (when (not (or (bobp)
-                                 (or (sp-point-in-comment)
+                                 (or (ppar-in-comment?)
                                      (save-excursion
                                        (backward-char 1)
                                        (looking-at "[[:space:]]+\\s<")))))
@@ -94,10 +95,6 @@ If optional argument P is present test this instead off point."
                                (or (sp-point-in-comment)
                                    (looking-at "[[:space:]]+\\s<")))
                      (forward-char 1))
-                   (when (not (or (eobp)
-                                  (or (sp-point-in-comment)
-                                      (looking-at "[[:space:]]+\\s<"))))
-                     (backward-char 1))
                    (point))))
       (cons open close))))
 
@@ -209,6 +206,7 @@ is returned."
       (--each-while lc (not (funcall (ppar-context-get it :pred))) (!cdr lc))
       (or (ppar-context-get lc :id) :code))))
 
+;;;@notest
 (defun ppar-in-context? (context &optional point)
   "Return non-nil if point is in CONTEXT.
 
@@ -222,6 +220,8 @@ buffer position."
 
 If optional argument POINT is non-nil, test context at that
 buffer position.
+
+If the context is :code, return nil.
 
 Context info is a plist with these items:
 
