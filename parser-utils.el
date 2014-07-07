@@ -1,6 +1,72 @@
 (require 'dash)
 
 
+;; Search utils
+
+(defun ppar-looking-at (regexp)
+  "Like `looking-at', but always case sensitive."
+  (let ((case-fold-search nil))
+    (looking-at regexp)))
+
+(defun ppar-looking-at-p (regexp)
+  "Like `looking-at-p', but always case sensitive."
+  (let ((case-fold-search nil))
+    (looking-at-p regexp)))
+
+(defun ppar-looking-back (regexp limit &optional not-greedy)
+  "Return non-nil if text before point matches regular expression REGEXP.
+
+LIMIT is the length of the longest permitted match in the
+backward direction.
+
+If optional argument NON-GREEDY is t search for any matching
+sequence, not necessarily the longest possible."
+  (let ((case-fold-search nil)
+        (from (max 1 (- (point) limit)))
+        (to (point))
+        (greedy (not not-greedy))
+        has-match)
+    (set-match-data '(0 0))
+    (if greedy
+        (save-excursion
+          (goto-char from)
+          (while (and (not has-match) (< (point) to))
+            (ppar-looking-at regexp)
+            (if (= (match-end 0) to)
+                (setq has-match t)
+              (forward-char 1)))
+          has-match)
+      (save-excursion
+        (not (null (search-backward-regexp (concat "\\(?:" regexp "\\)\\=") from t)))))))
+
+(defun ppar-looking-back-p (regexp limit &optional non-greedy)
+  "Same as `ppar-looking-back' but do not change the match data."
+  (save-match-data
+    (ppar-looking-back regexp limit non-greedy)))
+
+(defun ppar-search-backward (regexp limit &optional non-greedy)
+  "Search backwards for REGEXP.
+
+LIMIT is the length of the longest permitted match in the
+backward direction.
+
+If optional argument NON-GREEDY is t search for any matching
+sequence, not necessarily the longest possible.
+
+See also `ppar-looking-back'."
+  (let ((case-fold-search nil) r)
+    (when (search-backward-regexp regexp nil t)
+      (goto-char (match-end 0))
+      (unless non-greedy (ppar-looking-back regexp limit non-greedy))
+      (setq r (goto-char (match-beginning 0))))
+    r))
+
+(defun ppar-search-forward (regexp &optional bound noerror count)
+  "Just like `search-forward-regexp', but always case sensitive."
+  (let ((case-fold-search nil))
+    (search-forward-regexp regexp bound noerror count)))
+
+
 ;; Utils
 
 ;; TODO: it should also be possible to have a local value based on
