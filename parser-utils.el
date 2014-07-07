@@ -44,7 +44,7 @@ sequence, not necessarily the longest possible."
   (save-match-data
     (ppar-looking-back regexp limit non-greedy)))
 
-(defun ppar-search-backward (regexp limit &optional non-greedy)
+(defun ppar-search-backward-regexp (regexp limit &optional non-greedy)
   "Search backwards for REGEXP.
 
 LIMIT is the length of the longest permitted match in the
@@ -61,7 +61,7 @@ See also `ppar-looking-back'."
       (setq r (goto-char (match-beginning 0))))
     r))
 
-(defun ppar-search-forward (regexp &optional bound noerror count)
+(defun ppar-search-forward-regexp (regexp &optional bound noerror count)
   "Just like `search-forward-regexp', but always case sensitive."
   (let ((case-fold-search nil))
     (search-forward-regexp regexp bound noerror count)))

@@ -154,7 +154,7 @@ closing delimiters."
                        :regexp-group regexp)))
     delim-types))
 
-(defun ppar--search-forward (pairs &optional matcher)
+(defun ppar-search-forward (pairs &optional matcher)
   "Search forward for a delimiter matching some pair of PAIRS.
 
 If the optional argument MATCHER is non-nil, it should be a
@@ -175,7 +175,7 @@ This argument exists for performance reasons."
       (set-match-data mdata)
       (goto-char (match-beginning 0)))))
 
-(defun ppar--search-backward (pairs &optional matcher)
+(defun ppar-search-backward (pairs &optional matcher)
   "Search backward for a delimiter matching some pair of PAIRS.
 
 If the optional argument MATCHER is non-nil, it should be a
@@ -189,11 +189,11 @@ This argument exists for performance reasons."
                            (list
                             (and punct (let ((limit (-max (-map 'length (plist-get matcher :punct-group)))))
                                          (save-excursion
-                                           (when (ppar-search-backward punct limit)
+                                           (when (ppar-search-backward-regexp punct limit)
                                              (match-data)))))
                             (and word (let ((limit (-max (-map 'length (plist-get matcher :word-group)))))
                                         (save-excursion
-                                          (when (ppar-search-backward word limit)
+                                          (when (ppar-search-backward-regexp word limit)
                                             (match-data)))))
                             (and regexp (save-excursion
                                           (when (re-search-backward regexp nil t)
