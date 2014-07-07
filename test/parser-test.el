@@ -1,7 +1,78 @@
 (require 'ert)
 (require 'dash)
 
-(defun ppar-test-extract-pair (example)
+(defmacro ppar-test-search-forward (pairs setup &rest examples)
+  (declare (indent 1))
+  `(let ((pairs ',pairs))
+     (cl-dolist (example ',examples)
+       (with-temp-buffer
+         (fundamental-mode)
+         ,setup
+         (let ((case-fold-search nil))
+           (insert (if (listp example) (car example) example))
+           (goto-char (point-min))
+           (re-search-forward "F" nil t)
+           (if (listp example)
+               (if (numberp (cadr example))
+                   (should (equal (ppar--search-forward pairs) (cadr example)))
+                 (should (equal (ppar--search-forward pairs) nil)))
+             (ppar--search-forward pairs)
+             (should (looking-back "A"))))))))
+
+(ert-deftest ppar-test-search-forward-mixed ()
+  (ppar-test-search-forward ((:open "(" :close ")")
+                             (:open "[" :close ")")
+                             (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\s-?.*?>")
+                              :close ("</\\(.*?\\)>" "</\\1>"))
+                             (:open [begin] :close [end]))
+    nil
+    "aFsd A(foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [foo]) asdas asd"
+    "asd (Ffoo bar A<foo-barbas asdasda> begin </foo> bar a-end-a baz [foo]) asdas asd"
+    ;; we can't mark beginning of word with A, so we give the point instead
+    ("asd (foo bar <foo-barbas Fasdasda> begin </foo> bar a-end-a baz [foo]) asdas asd" 36)
+    "asd (foo bar <foo-barbas asdasda> bFegin A</foo> bar a-end-a baz [foo]) asdas asd"
+    ("asd (foo bar <foo-barbas asdasda> begin </foo> Fbar a-end-a baz [foo]) asdas asd" 55)
+    "asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a Fbaz A[foo]) asdas asd"
+    "asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [fFoo]A) asdas asd"
+    ("asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [foo]) aFsdas asd")
+    ))
+
+(defmacro ppar-test-search-backward (pairs setup &rest examples)
+  (declare (indent 1))
+  `(let ((pairs ',pairs))
+     (cl-dolist (example ',examples)
+       (with-temp-buffer
+         (fundamental-mode)
+         ,setup
+         (let ((case-fold-search nil))
+           (insert (if (listp example) (car example) example))
+           (goto-char (point-min))
+           (re-search-forward "F" nil t)
+           (if (listp example)
+               (if (numberp (cadr example))
+                   (should (equal (ppar--search-backward pairs) (cadr example)))
+                 (should (equal (ppar--search-backward pairs) nil)))
+             (ppar--search-backward pairs)
+             (should (looking-at "A"))))))))
+
+(ert-deftest ppar-test-search-backward-mixed ()
+  (ppar-test-search-backward ((:open "(" :close ")")
+                              (:open "[" :close ")")
+                              (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\s-?.*?>")
+                               :close ("</\\(.*?\\)>" "</\\1>"))
+                              (:open [begin] :close [end]))
+    nil
+    "asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [foo])A asdas aFsd"
+    "asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [AfoFo]) asdas asd"
+    ("asd (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a bazF [foo]) asdas asd" 57)
+    "asd (foo bar <foo-barbas asdasda> begin </foo>A baFr a-end-a baz [foo]) asdas asd"
+    ("asd (foo bar <foo-barbas asdasda> begin </fFoo> bar a-end-a baz [foo]) asdas asd" 40)
+    "asd (foo bar <foo-barbas asdasda>A beFgin </foo> bar a-end-a baz [foo]) asdas asd"
+    "asd (Afoo bar <foo-barbas asdaFsda> begin </foo> bar a-end-a baz [foo]) asdas asd"
+    ("asdF (foo bar <foo-barbas asdasda> begin </foo> bar a-end-a baz [foo]) asdas asd")
+    ))
+
+(defun ppar-test--extract-pair (example)
   (let* ((case-fold-search nil)
          (example (replace-regexp-in-string "[FB]" "" example)))
     (with-temp-buffer
@@ -34,7 +105,7 @@
        (with-temp-buffer
          (fundamental-mode)
          ,setup
-         (let ((pair-data (ppar-test-extract-pair example))
+         (let ((pair-data (ppar-test--extract-pair example))
                (case-fold-search nil))
            (insert example)
            (goto-char (point-min))

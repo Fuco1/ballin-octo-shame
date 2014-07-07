@@ -149,6 +149,55 @@ closing delimiters."
                        :regexp-group regexp)))
     delim-types))
 
+(defun ppar--search-forward (pairs &optional matcher)
+  "Search forward for a delimiter matching some pair of PAIRS.
+
+If the optional argument MATCHER is non-nil, it should be a
+matcher object for PAIRS as returned by `ppar--get-matcher'.
+This argument exists for performance reasons."
+  (setq matcher (or matcher (ppar--get-matcher pairs)))
+  (let* ((punct (plist-get matcher :punct))
+         (word (plist-get matcher :word))
+         (regexp (plist-get matcher :regexp))
+         (needles (list punct word regexp))
+         (matches (-remove 'not
+                           (--map (save-excursion
+                                    (when (re-search-forward it nil t)
+                                      (match-data)))
+                                  (-remove 'not needles))))
+         (mdata (when matches (--min-by (> (car it) (car other)) matches))))
+    (when mdata
+      (set-match-data mdata)
+      (goto-char (match-beginning 0)))))
+
+(defun ppar--search-backward (pairs &optional matcher)
+  "Search backward for a delimiter matching some pair of PAIRS.
+
+If the optional argument MATCHER is non-nil, it should be a
+matcher object for PAIRS as returned by `ppar--get-matcher'.
+This argument exists for performance reasons."
+  (setq matcher (or matcher (ppar--get-matcher pairs)))
+  (let* ((punct (plist-get matcher :punct))
+         (word (plist-get matcher :word))
+         (regexp (plist-get matcher :regexp))
+         (matches (-remove 'not
+                           (list
+                            (and punct (let ((limit (-max (-map 'length (plist-get matcher :punct-group)))))
+                                         (save-excursion
+                                           (when (ppar-search-backward punct limit)
+                                             (match-data)))))
+                            (and word (let ((limit (-max (-map 'length (plist-get matcher :word-group)))))
+                                        (save-excursion
+                                          (when (ppar-search-backward word limit)
+                                            (match-data)))))
+                            (and regexp (save-excursion
+                                          (when (re-search-backward regexp nil t)
+                                            (match-data)))))))
+         (mdata (when matches (--max-by (> (cadr it) (cadr other)) matches))))
+    (when mdata
+      (set-match-data mdata)
+      (goto-char (match-end 0)))))
+
 (defun ppar--skip-to-first-pair (pairs &optional back)
   "Skip to the first pair.
 
