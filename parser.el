@@ -126,25 +126,21 @@ closing delimiters."
                       (--map (plist-get it :close) pairs)))))
          (delim-groups (--group-by
                         (cond
-                         ((vectorp it) [])
-                         ((listp it) nil)
-                         (t t))
+                         ((vectorp it) :word)
+                         ((listp it) :regexp)
+                         (t :punct))
                         delims))
-         (symbols (cdr (assoc t delim-groups)))
-         (words (cdr (assoc [] delim-groups)))
-         (regexps (cdr (assoc nil delim-groups)))
-         (delim-types (-keep 'identity
-                             (list
-                              (and symbols (regexp-opt symbols))
-                              (and words (regexp-opt words 'words))
-                              (and regexps (mapconcat
-                                            (lambda (it) (ppar--wrap-noncapture (car it)))
-                                            regexps
-                                            "\\|"))))))
-    (mapconcat
-     'ppar--wrap-noncapture
-     delim-types
-     "\\|")))
+         (punct (cdr (assoc :punct delim-groups)))
+         (word (cdr (assoc :word delim-groups)))
+         (regexp (cdr (assoc :regexp delim-groups)))
+         (delim-types (list
+                       :symbols (and punct (regexp-opt punct))
+                       :words (and word (regexp-opt word 'words))
+                       :regexps (and regexp (mapconcat
+                                             (lambda (it) (ppar--wrap-noncapture (car it)))
+                                             regexp
+                                             "\\|")))))
+    delim-types))
 
 (defun ppar--skip-to-first-pair (pairs &optional back)
   "Skip to the first pair.
