@@ -94,8 +94,9 @@ Additionally, each pair has the following optional attributes:
 ;; TODO: this will be removed in the future
 (setq ppar-pairs '((:open "(" :close ")")
                    (:open "[" :close ")")
-                   (:open ("<\\(.*?\\)\\s-?.*?>" "<\\1\\s-?.*?>")
-                    :close ("</\\(.*?\\)>" "</\\1>"))))
+                   (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\s-?.*?>")
+                    :close ("</\\(.*?\\)>" "</\\1>"))
+                   (:open [begin] :close [end])))
 
 ;; the regexp matchers will be simply stringed one after another.  To
 ;; get the correct match groups, we will remove all the nils from the
@@ -131,7 +132,10 @@ closing delimiters."
                          (t :punct))
                         delims))
          (punct (cdr (assoc :punct delim-groups)))
-         (word (cdr (assoc :word delim-groups)))
+         (word (--map
+                (let ((x (elt it 0)))
+                  (if (symbolp x) (symbol-name x) x))
+                (cdr (assoc :word delim-groups))))
          (regexp (cdr (assoc :regexp delim-groups)))
          (delim-types (list
                        :punct (and punct (regexp-opt punct))
