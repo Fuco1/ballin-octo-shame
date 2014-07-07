@@ -112,6 +112,11 @@ Additionally, each pair has the following optional attributes:
   "Wrap STRING with non-capturing regexp group."
   (concat "\\(?:" string "\\)"))
 
+(defun ppar--get-word-delim (delim)
+  "Return a string describing word delimiter DELIM."
+  (let ((x (elt delim 0)))
+    (if (symbolp x) (symbol-name x) x)))
+
 ;; N.B.: the decision whether we want to scan a pair or not should be
 ;; made on the client level by supplying appropriately filtered PAIRS
 (defun ppar--get-matcher (pairs &optional what)
@@ -137,10 +142,7 @@ closing delimiters."
                          (t :punct))
                         delims))
          (punct (cdr (assoc :punct delim-groups)))
-         (word (--map
-                (let ((x (elt it 0)))
-                  (if (symbolp x) (symbol-name x) x))
-                (cdr (assoc :word delim-groups))))
+         (word (-map 'ppar--get-word-delim (cdr (assoc :word delim-groups))))
          (regexp (cdr (assoc :regexp delim-groups)))
          (delim-types (list
                        :punct (and punct (regexp-opt punct))
