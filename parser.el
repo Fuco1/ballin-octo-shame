@@ -20,51 +20,72 @@ Pair delimiters can be defined in two ways: with strings or
 regular expressions (regular expressions and a PDA parser should
 suffice in most of the common programming languages).
 
-If the pair is defined using string, these are interpreted
+If the pair is defined using strings, these are interpreted
 literally (= not as a regular expression) when matching against
 them in the buffer.  The opening and closing pair can have no
 mutual dependence.
 
-If the pairs have mutual dependence or are more complex, a
+If the pairs have mutual dependences or are more complex, a
 \"regular expression parsing\" (regexp parsing) is supported.  In
-this case, two versions for each opening and closing delimiter
-are provided, depending on the direction of the search.
+this case, each delimiter is defined by three strings.
 
-We will use the following terminology:
+We will use the following terminology.  ``A replacement string''
+is a string with the same format as the replacement in
+`replace-regexp', that is, it can contain backrefenreces to
+capture groups of previous search.
 
-- forward opening delimiter: a regular expression, possibly with
-  capture groups, matching an opening delimiter in forward
-  direction
+- opening regexp: a regular expression, possibly with capture
+  groups, matching the opening delimiter
 
-- forward closing delimiter: a replacement string (with the same
-  format as `replace-regexp') matching a closing delimiter in the
-  forward direction
+- forward opening delimiter: a replacement string matching the
+  opening delimiter *after* the backreferences are resolved using
+  the capture groups from the opening regexp.
 
-- backward closing delimiter: a regular expression, possibly with
-  capture groups, matching a closing delimiter in backward
-  direction
+- backward opening delimiter: a replacement string matching the
+  opening delimiter *after* the backreferences are resolved using
+  the capture groups from the closing regexp.
 
-- backward opening delimiter: a replacement string (with the same
-  format as `replace-regexp') matching an opening delimiter in
-  the backward direction
+- closing regexp: a regular expression, possibly with capture
+  groups, matching the closing delimiter
+
+- forward closing delimiter: a replacement string matching the
+  closing delimiter *after* the backreferences are resolved using
+  the capture groups from the opening regexp.
+
+- backward closing delimiter: a replacement string matching the
+  closing delimiter *after* the backreferences are resolved using
+  the capture groups from the closing regexp.
 
 Here, the forward parsing system is explained, it works
-analogically in the other direction.  First, we try to match the
-forward opening delimiter.  If a match was found, the forward
-closing delimiter is evaluated as a replacement string, replacing
-all the back-references with the captured groups.  After this
-replacement, it is interpreted as a *regular expression*.  We
-then use the opening and closing delimiters as regular
-expressions and try to find the closing delimiter that would
-balance the expression.
+analogically in the other direction.  First, we try to find a
+match using the opening or closing regexp.
+
+If a match was found for the opening regexp, the forward opening
+and closing delimiters are evaluated as replacement strings,
+replacing all the back-references with the capture groups in the
+opening regexp.
+
+If a match was found for the closing regexp, the backward opening
+and closing delimiters are evaluated as replacement strings,
+replacing all the back-references with the capture groups in the
+closing regexp.
+
+After this replacement, these are interpreted as *regular
+expressions*.  We then use the forward (or backward) opening and
+closing delimiters as regular expressions and try to find the
+balanced expression.
 
 Example.
 
-In HTML, the forward definitions can look something like
+In HTML, the definitions can look something like
 this (warning, the backslashes are not escaped!):
 
-- forward opening delimiter: <\(.*?\)\s-?.*?>
-- forward closing delimiter: </\1>
+- opening regexp: <\\(.*?\\)\\(?:\\s-.*?\\)?>
+- forward opening delimiter: <\\1\\(?:\\s-.*?\\)?>
+- backward opening delimiter: <\\1\\(?:\\s-.*?\\)?>
+- closing regexp: </\\(.*?\\)>
+- forward closing delimiter: </\\1>
+- backward closing delimiter: </\\1>
 
 Pair definition structure
 =========================
@@ -77,10 +98,10 @@ Each pair has the following required attributes:
   - If a vector, it can contain a string or a symbol which is
     interpreted as a word, that is, it can not be matched inside a
     symbol.
-  - If a list with two elements, these should be strings defining the
-    forward opening delimiter and the backward opening delimiter.
-  - If the list has only one element, it is taken for both the forward
-    and backward opening delimiter.
+  - If a list, it should have three elements and these should be
+    strings defining the opening regexp, forward opening delimiter and
+    backward opening delimiter.
+
 
 - close: Closing delimiter.  It is defined in the same way as
   the opening one.
@@ -99,8 +120,8 @@ Additionally, each pair has the following optional attributes:
 ;; TODO: this will be removed in the future
 (setq ppar-pairs '((:open "(" :close ")")
                    (:open "[" :close ")")
-                   (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\s-?.*?>")
-                    :close ("</\\(.*?\\)>" "</\\1>"))
+                   (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>")
+                    :close ("</\\(.*?\\)>" "</\\1>" "</\\1>"))
                    (:open [begin] :close [end])))
 
 ;; the regexp matchers will be simply stringed one after another.  To
