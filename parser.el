@@ -134,12 +134,15 @@ closing delimiters."
          (word (cdr (assoc :word delim-groups)))
          (regexp (cdr (assoc :regexp delim-groups)))
          (delim-types (list
-                       :symbols (and punct (regexp-opt punct))
-                       :words (and word (regexp-opt word 'words))
-                       :regexps (and regexp (mapconcat
-                                             (lambda (it) (ppar--wrap-noncapture (car it)))
-                                             regexp
-                                             "\\|")))))
+                       :punct (and punct (regexp-opt punct))
+                       :word (and word (regexp-opt word 'words))
+                       :regexp (and regexp (mapconcat
+                                            (lambda (it) (ppar--wrap-noncapture (car it)))
+                                            regexp
+                                            "\\|"))
+                       :punct-group punct
+                       :word-group word
+                       :regexp-group regexp)))
     delim-types))
 
 (defun ppar--skip-to-first-pair (pairs &optional back)
