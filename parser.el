@@ -173,7 +173,7 @@ This argument exists for performance reasons."
          (mdata (when matches (--min-by (> (car it) (car other)) matches))))
     (when mdata
       (set-match-data mdata)
-      (goto-char (match-beginning 0)))))
+      (goto-char (match-end 0)))))
 
 (defun ppar-search-backward (pairs &optional matcher)
   "Search backward for a delimiter matching some pair of PAIRS.
@@ -201,7 +201,7 @@ This argument exists for performance reasons."
          (mdata (when matches (--max-by (> (cadr it) (cadr other)) matches))))
     (when mdata
       (set-match-data mdata)
-      (goto-char (match-end 0)))))
+      (goto-char (match-beginning 0)))))
 
 (defun ppar--skip-to-first-pair (pairs &optional back)
   "Skip to the first pair.
