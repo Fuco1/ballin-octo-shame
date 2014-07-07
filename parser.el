@@ -2,6 +2,11 @@
 
 ;; TODO: do we even need this? Maybe it's better to pass the pairs
 ;; list around as an argument.
+;; TODO: add scope-limiters for pairs like //, **, "" etc
+;; TODO: add prefix/suffix
+;;       - syntax class
+;;       - regexp
+;;       - function
 (defconst ppar-pairs ()
   "Pair definitions.
 
@@ -217,7 +222,7 @@ cdr is a list of closing delimiters which contribute to the
                          (match-string 0)))
                    (let (m)
                      (while (and (setq m (re-search-forward matcher nil t))
-                                 (not (eq (ppar-get-context) :code))))
+                                 (not (eq (ppar-get-context back) :code))))
                      (when m
                        (match-string 0))))))
       ;; work out the delimiter groups here based on the match
