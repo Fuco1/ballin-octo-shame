@@ -120,6 +120,7 @@ Additionally, each pair has the following optional attributes:
 ;; TODO: this will be removed in the future
 (setq ppar-pairs '((:open "(" :close ")")
                    (:open "[" :close ")")
+                   (:open "(" :close "]")
                    (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>")
                     :close ("</\\(.*?\\)>" "</\\1>" "</\\1>"))
                    (:open [begin] :close [end])))
@@ -137,6 +138,22 @@ Additionally, each pair has the following optional attributes:
   "Return a string describing word delimiter DELIM."
   (let ((x (elt delim 0)))
     (if (symbolp x) (symbol-name x) x)))
+
+(defun ppar--get-delim (pair which)
+  "Return the string representation of PAIR's delimiter.
+
+WHICH is either :open or :close."
+  (let ((delim (plist-get pair which)))
+    (cond
+     ((vectorp delim) (ppar--get-word-delim delim))
+     ((listp delim) (car delim))
+     (t delim))))
+
+(defun ppar-string-match-entire-p (regexp string)
+  "Return non-nil if REGEXP matches STRING entirely.
+
+This works like `string-match-p' but wrapped with \\` and \\'."
+  (string-match-p (concat "\\`" regexp "\\'") string))
 
 ;; N.B.: the decision whether we want to scan a pair or not should be
 ;; made on the client level by supplying appropriately filtered PAIRS
@@ -228,6 +245,20 @@ This argument exists for performance reasons."
       (goto-char (match-beginning 0))
       mdata)))
 
+(defun ppar--match-pair (pair match)
+  "Return non-nil if PAIR's opening or closing delimiter matches MATCH."
+  (let ((op (plist-get pair :open))
+        (cl (plist-get pair :close)))
+    (cond
+     ((vectorp op)
+      (or (ppar-string-match-entire-p (regexp-quote (ppar--get-word-delim op)) match)
+          (ppar-string-match-entire-p (regexp-quote (ppar--get-word-delim cl)) match)))
+     ((listp op)
+      (or (ppar-string-match-entire-p (car op) match)
+          (ppar-string-match-entire-p (car cl) match)))
+     (t
+      (or (ppar-string-match-entire-p (regexp-quote op) match)
+          (ppar-string-match-entire-p (regexp-quote cl) match))))))
 (defun ppar--skip-to-first-pair (pairs &optional back)
   "Skip to the first pair.
 
