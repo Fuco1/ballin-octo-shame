@@ -259,6 +259,27 @@ This argument exists for performance reasons."
      (t
       (or (ppar-string-match-entire-p (regexp-quote op) match)
           (ppar-string-match-entire-p (regexp-quote cl) match))))))
+
+;; (ppar--get-overlapping-pairs ppar-pairs '(:open "[" :close ")"))
+;; add tests?
+(defun ppar--get-overlapping-pairs (pairs match)
+  "Return transitive closure of all pairs from the list PAIRS overlapping with pair MATCH.
+
+Two pairs overlap if they share the same opening or closing delimiter."
+  (let ((overlapping-pairs (list match))
+        (overlapping-pairs-next nil)
+        (len 0))
+    (while (/= (length overlapping-pairs) len)
+      (setq overlapping-pairs-next nil)
+      (-each pairs
+        (lambda (pair)
+          (when (or (--any? (ppar--match-pair it (ppar--get-delim pair :open)) overlapping-pairs)
+                    (--any? (ppar--match-pair it (ppar--get-delim pair :close)) overlapping-pairs))
+            (push pair overlapping-pairs-next))))
+      (setq len (length overlapping-pairs))
+      (setq overlapping-pairs overlapping-pairs-next))
+    overlapping-pairs))
+
 (defun ppar--skip-to-first-pair (pairs &optional back)
   "Skip to the first pair.
 
