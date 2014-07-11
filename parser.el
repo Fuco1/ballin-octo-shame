@@ -261,7 +261,6 @@ This argument exists for performance reasons."
           (ppar-string-match-entire-p (regexp-quote cl) match))))))
 
 ;; (ppar--get-overlapping-pairs ppar-pairs '(:open "[" :close ")"))
-;; add tests?
 (defun ppar--get-overlapping-pairs (pairs match)
   "Return transitive closure of all pairs from the list PAIRS overlapping with pair MATCH.
 

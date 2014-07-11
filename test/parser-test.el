@@ -207,6 +207,20 @@
     "foo (bar baz X,@X(Xxuuq fluxX)XX asd Basd) asdas"
     "foo '(bar baz X'X(Xxuuq fluxX)XX asd Basd) asdas"))
 
+(ert-deftest ppar-test-get-overlapping-pairs ()
+  (let ((ppar-pairs '((:open "(" :close ")")
+                      (:open "[" :close ")")
+                      (:open "(" :close "]")
+                      (:open ("<\\(.*?\\)\\(?:\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>" "<\\1\\(\\s-.*?\\)?>")
+                       :close ("</\\(.*?\\)>" "</\\1>" "</\\1>"))
+                      (:open [begin] :close [end]))))
+    (should (equal (ppar--get-overlapping-pairs ppar-pairs '(:open "[" :close ")"))
+                   '((:open "(" :close "]") (:open "[" :close ")") (:open "(" :close ")"))))
+    (should (equal (ppar--get-overlapping-pairs ppar-pairs '(:open "(" :close ")"))
+                   '((:open "(" :close "]") (:open "[" :close ")") (:open "(" :close ")"))))
+    (should (equal (ppar--get-overlapping-pairs ppar-pairs '(:open [begin] :close [end]))
+                   '((:open [begin] :close [end]))))))
+
 (provide 'parser-test)
 
 ;; Local Variables:
