@@ -158,7 +158,7 @@ This works like `string-match-p' but wrapped with \\` and \\'."
 ;; N.B.: the decision whether we want to scan a pair or not should be
 ;; made on the client level by supplying appropriately filtered PAIRS
 (defun ppar--get-matcher (pairs &optional what)
-  "Return a regular expression matching all the delimiters of PAIRS
+  "Return a matcher object matching all the delimiters of PAIRS
 
 PAIRS is a list of pairs in the format of `ppar-pairs' we want to
 scan.
@@ -212,7 +212,7 @@ This argument exists for performance reasons."
                                   (-remove 'not needles))))
          (mdata (when matches (--min-by (> (car it) (car other)) matches))))
     (when mdata
-      (set-match-data mdata)
+      (set-match-data (-remove 'not mdata))
       (goto-char (match-end 0))
       mdata)))
 
@@ -241,7 +241,7 @@ This argument exists for performance reasons."
                                             (match-data)))))))
          (mdata (when matches (--max-by (> (cadr it) (cadr other)) matches))))
     (when mdata
-      (set-match-data mdata)
+      (set-match-data (-remove 'not mdata))
       (goto-char (match-beginning 0))
       mdata)))
 
