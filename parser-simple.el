@@ -91,6 +91,9 @@ If BACK is non-nil, search backwards."
             (ppar-get-stringlike-weak (list pair) back))
            (t (ppar-get-paired-expression (list pair) back))))))))
 
+(defun ppar-get-paired-expression (pair-list &optional back)
+  ;; ignores the pair-list for the mean time
+  (sp-get-paired-expression back))
 
 (defun ppar-get-syntactic-string (&optional back)
   (unless (eq (ppar-get-context) 'string) (if back (backward-char) (forward-char)))
