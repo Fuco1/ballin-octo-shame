@@ -91,3 +91,9 @@ If BACK is non-nil, search backwards."
             (ppar-get-stringlike-weak (list pair) back))
            (t (ppar-get-paired-expression (list pair) back))))))))
 
+
+(defun ppar-get-syntactic-string (&optional back)
+  (unless (eq (ppar-get-context) 'string) (if back (backward-char) (forward-char)))
+  (-let (((&plist :beg beg :end end) (ppar-get-context-info))
+         (delim (string (nth 3 (syntax-ppss)))))
+    (list :ber beg :end end :op delim :cl delim :prefix "" :suffix "")))
