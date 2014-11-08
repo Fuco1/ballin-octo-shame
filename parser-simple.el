@@ -61,3 +61,33 @@ If BACK is non-nil, search backwards."
       (when (/= p (point))
         (goto-char (match-beginning 0))
         context-info))))
+
+(defun ppar-get-sexp (pair-list &optional back)
+  (save-match-data
+    (save-excursion
+      (-when-let (context-info (ppar-skip-to-paired-expression pair-list back))
+        ;; TODO: avoid computing needle twice
+        (-let* ((needle (sp--strict-regexp-opt (-mapcat '-cons-to-list pair-list)))
+                ((&plist :type type :beg beg :end end) context-info)
+                ;; this must succeed, because context-info =/= null
+                (op (progn
+                      (re-search-forward needle)
+                      (goto-char (match-beginning 0))
+                      (match-string 0)))
+                (pair (-first (-lambda ((o)) (equal op o)) pair-list))
+                ((op . cl) pair))
+          (cond
+           ((and (= (length op) 1)
+                 (= (char-syntax (aref op 0)) ?\"))
+            (cond
+             ((eq type 'string)
+              (ppar-get-syntactic-string back))
+             ;; decide here on some pair property if we want to call
+             ;; strict or fast version
+             (t (ppar-get-stringlike-weak (list pair) back))))
+           ((equal op cl)
+            ;; decide here on some pair property if we want to call
+            ;; strict or fast version
+            (ppar-get-stringlike-weak (list pair) back))
+           (t (ppar-get-paired-expression (list pair) back))))))))
+
