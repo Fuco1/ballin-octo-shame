@@ -100,3 +100,7 @@ If BACK is non-nil, search backwards."
   (-let (((&plist :beg beg :end end) (ppar-get-context-info))
          (delim (string (nth 3 (syntax-ppss)))))
     (list :ber beg :end end :op delim :cl delim :prefix "" :suffix "")))
+
+(defun ppar-get-stringlike-strict (pair-list &optional back))
+
+(defun ppar-get-stringlike-fast (pair-list &optional back))
