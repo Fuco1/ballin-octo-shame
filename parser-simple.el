@@ -31,11 +31,16 @@ If CONTEXT is specified, assume we are in the given contex."
       (when point (goto-char point))
       (let* ((context-type (or context (ppar-get-context)))
              (bounds (cl-case context-type
-                       (string (let ((beg (nth 8 (syntax-ppss)))
-                                     (end (progn
-                                            (while (nth 3 (syntax-ppss)) (forward-char))
-                                            (point))))
-                                 (cons beg end)))
+                       (string (let* ((syntax (syntax-ppss))
+                                      (delim (char-to-string (nth 3 syntax)))
+                                      (beg (nth 8 syntax))
+                                      (not-closed nil)
+                                      (end (progn
+                                             (while (and
+                                                     (setq closed (re-search-forward delim nil t))
+                                                     (nth 3 (syntax-ppss))))
+                                             (point))))
+                                 (cons beg (or (and closed end) (point-max)))))
                        (comment (sp-get-comment-bounds))
                        (org-src-block (let ((org-elem (cdr (org-element-at-point))))
                                         (cons (plist-get org-elem :begin)
